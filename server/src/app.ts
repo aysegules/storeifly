@@ -6,6 +6,7 @@ import cookieParser from "cookie-parser";
 import { errorHandler } from "./middlewares/error.middleware.ts";
 
 import authRouter from "./routes/auth.route.ts";
+import categoryRouter from "./routes/category.route.ts";
 
 const app = express();
 
@@ -42,6 +43,7 @@ app.get("/", (_req: Request, res: Response) => {
 });
 
 app.use(`${VERSION}/auth`, authRouter);
+app.use(`${VERSION}/categories`, categoryRouter);
 
 app.use(errorHandler);
 

@@ -16,10 +16,166 @@ model User {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  orders Order[] @relation("CustomerOrders")
 }
 
 enum Role {
   admin
   vendor
   customer
+}
+
+model Category {
+  id   Int    @id @default(autoincrement())
+  name String
+  slug String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  storeId  Int?
+  store    Store?    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  products Product[]
+}
+
+model Store {
+  id                    Int      @id @default(autoincrement())
+  vendorId              String
+  name                  String
+  slug                  String   @unique
+  logoUrl               String?
+  bannerUrl             String?
+  description           String?
+  currency              String?  @default("USD")
+  status                String?  @default("active")
+  shippingFee           Decimal? @default(0)
+  freeShippingThreshold Decimal? @default(0)
+  heroStyle             String?  @default("hero1")
+  accentColor           String?  @default("#059669")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  categories Category[]
+  products   Product[]
+  orders     Order[]
+}
+
+enum OrderStatus {
+  pending
+  paid
+  processing
+  shipped
+  delivered
+  cancelled
+  refunded
+}
+
+enum PaymentStatus {
+  pending
+  paid
+  failed
+  refunded
+  partially_refunded
+}
+
+enum PaymentMethod {
+  cod
+  card
+  paypal
+  stripe
+  bank_transfer
+}
+
+model OrderAddress {
+  id          Int     @id @default(autoincrement())
+  fullName    String?
+  email       String?
+  phone       String?
+  country     String?
+  city        String?
+  state       String?
+  postalCode  String?
+  addressLine String?
+  apartment   String?
+  note        String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  shippingOrders Order[] @relation("OrderShippingAddress")
+  billingOrders  Order[] @relation("OrderBillingAddress")
+}
+
+model Order {
+  id                Int           @id @default(autoincrement())
+  orderNumber       String        @unique
+  customerId        String?
+  customer          User?         @relation("CustomerOrders", fields: [customerId], references: [id], onDelete: SetNull)
+  customerName      String
+  customerEmail     String
+  customerPhone     String?
+  subtotal          Decimal
+  discount          Decimal       @default(0)
+  shippingFee       Decimal       @default(0)
+  total             Decimal
+  couponCode        String?
+  paymentStatus     PaymentStatus @default(pending)
+  paymentMethod     PaymentMethod @default(cod)
+  orderStatus       OrderStatus   @default(pending)
+  trackingNumber    String?
+  shippingAddressId Int?
+  shippingAddress   OrderAddress? @relation("OrderShippingAddress", fields: [shippingAddressId], references: [id], onDelete: SetNull)
+  billingAddressId  Int?
+  billingAddress    OrderAddress? @relation("OrderBillingAddress", fields: [billingAddressId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  storeId Int
+  store   Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  items OrderItem[]
+}
+
+model OrderItem {
+  id          Int      @id @default(autoincrement())
+  orderId     Int
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   Int?
+  product     Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  productName String
+  variantName String?
+  sku         String?
+  quantity    Int
+  unitPrice   Decimal
+  discount    Decimal  @default(0)
+  total       Decimal
+  attributes  Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Product {
+  id             Int      @id @default(autoincrement())
+  name           String
+  description    String?
+  price          Decimal
+  compareAtPrice Decimal?
+  sku            String?
+  stock          Int?     @default(0)
+  images         Json?    @default("[]")
+  variants       Json?    @default("[]")
+  status         String?  @default("active")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  storeId    Int
+  store      Store       @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  categoryId Int
+  category   Category    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  orderItems OrderItem[]
 }

@@ -3,7 +3,7 @@ import z from "zod";
 const registerSchema = z.object({
   body: z
     .object({
-      name: z.string().max(100),
+      name: z.string().min(2).max(100),
       email: z.email().min(6, "Email is required").max(100),
       password: z.string().min(6, "Password is required").max(20),
       confirmPassword: z
@@ -22,8 +22,16 @@ const registerSchema = z.object({
     }),
 });
 
+const loginSchema = z.object({
+  body: z.object({
+    email: z.email().min(6, "Email is required").max(100),
+    password: z.string().min(6, "Password is required").max(20),
+  }),
+});
+
 type RegisterInput = z.infer<typeof registerSchema>["body"];
 type Register = Omit<RegisterInput, "confirmPassword">;
+type Login = z.infer<typeof loginSchema>["body"];
 
-export type { Register };
-export { registerSchema };
+export type { Register, Login };
+export { registerSchema, loginSchema };

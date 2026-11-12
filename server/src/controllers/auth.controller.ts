@@ -17,4 +17,19 @@ const register = asyncHandler(async (req: Request, res: Response) => {
   });
 });
 
-export { register };
+const login = asyncHandler(async (req: Request, res: Response) => {
+  const { email, password } = req.body;
+
+  const data = await service.login({ email, password });
+
+  res.status(200).json({
+    success: true,
+    data,
+  });
+});
+
+const logout = asyncHandler(async (_req: Request, res: Response) => {
+  res.status(200).send();
+});
+
+export { register, login, logout };

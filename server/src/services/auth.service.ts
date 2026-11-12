@@ -2,7 +2,8 @@ import { prisma } from "../../lib/prisma";
 import { AppError } from "../errors/AppError";
 import { generateToken } from "../utils/generateToken";
 import { hashPassword } from "../utils/hashPassword";
-import type { Register } from "../validators/auth.validator";
+import type { Login, Register } from "../validators/auth.validator";
+import bcrypt from "bcrypt";
 
 const register = async ({ name, email, password }: Register) => {
   const existingUser = await prisma.user.findUnique({
@@ -36,4 +37,26 @@ const register = async ({ name, email, password }: Register) => {
   return { user, token };
 };
 
-export { register };
+const login = async ({ email, password }: Login) => {
+  const existingUser = await prisma.user.findUnique({
+    where: { email },
+  });
+
+  if (!existingUser) {
+    throw new AppError("Invalid email or password", 401);
+  }
+
+  const isPasswordValid = await bcrypt.compare(password, existingUser.password);
+
+  if (!isPasswordValid) {
+    throw new AppError("Invalid email or password", 401);
+  }
+
+  const token = generateToken(existingUser.id);
+
+  const { password: _, ...user } = existingUser;
+
+  return { user, token };
+};
+
+export { register, login };

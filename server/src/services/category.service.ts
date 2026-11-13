@@ -1,7 +1,22 @@
 import { prisma } from "../../lib/prisma.ts";
 import { AppError } from "../errors/AppError";
 
-const getCategoriesByStore = async () => {};
+const getCategoriesByStore = async (id: number) => {
+  const existingStore = await prisma.store.findUnique({
+    where: { id },
+    include: {
+      categories: true,
+      products: true,
+      _count: { select: { products: true } },
+    },
+  });
+
+  if (!existingStore) {
+    throw new AppError("Store not found", 404);
+  }
+
+  return existingStore;
+};
 
 const createCategory = async ({ id, name }: { id: string; name: string }) => {
   const store = await prisma.store.findFirst({
@@ -30,6 +45,18 @@ const createCategory = async ({ id, name }: { id: string; name: string }) => {
   return category;
 };
 
-const deleteCategory = async () => {};
+const deleteCategory = async (id: number) => {
+  const existingStore = await prisma.store.findUnique({
+    where: { id },
+  });
+
+  if (!existingStore) {
+    throw new AppError("Store not found", 404);
+  }
+
+  await prisma.store.delete({
+    where: { id },
+  });
+};
 
 export { getCategoriesByStore, createCategory, deleteCategory };
